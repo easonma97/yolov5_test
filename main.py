@@ -97,15 +97,15 @@ def convert_to_yolov5(info_dict):
     print("\n".join(print_buffer), file=open(save_file_name, "w"))
 
 # Get the annotations
-annotations = [os.path.join('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/', x) for x in os.listdir('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations') if x[-3:] == "xml"]
+annotations = [os.path.join('annotations', x) for x in os.listdir('annotations') if x[-3:] == "xml"]
 annotations.sort()
 
 # Convert and save the annotations
 for ann in tqdm(annotations):
     info_dict = extract_info_from_xml(ann)
     map_class_and_id()
-#     convert_to_yolov5(info_dict)
-# annotations = [os.path.join('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/', x) for x in os.listdir('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations') if x[-3:] == "txt"]
+    convert_to_yolov5(info_dict)
+annotations = [os.path.join('annotations', x) for x in os.listdir('annotations') if x[-3:] == "txt"]
 print(class_dict)
 
 #
@@ -156,8 +156,8 @@ def plot_bounding_box(image, annotation_list):
 # plot_bounding_box(image, annotation_list)
 
 # Read images and annotations
-images = [os.path.join('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/images/', x) for x in os.listdir('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/images') if x[-3:] == "png"]
-annotations = [os.path.join('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/', x) for x in os.listdir('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations') if x[-3:] == "txt"]
+images = [os.path.join('images', x) for x in os.listdir('images') if x[-3:] == "png"]
+annotations = [os.path.join('annotations', x) for x in os.listdir('annotations') if x[-3:] == "txt"]
 
 images.sort()
 annotations.sort()
@@ -180,9 +180,9 @@ def move_files_to_folder(list_of_files, destination_folder):
             assert False
 
 # Move the splits into their folders
-move_files_to_folder(train_images, 'C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/images/train/')
-move_files_to_folder(val_images, 'C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/images/val/')
-move_files_to_folder(test_images, 'C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/images/test/')
-move_files_to_folder(train_annotations, 'C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/train/')
-move_files_to_folder(val_annotations, 'C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/val/')
-move_files_to_folder(test_annotations, 'C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/test/')
+move_files_to_folder(train_images, 'images/train/')
+move_files_to_folder(val_images, 'images/val/')
+move_files_to_folder(test_images, 'images/test/')
+move_files_to_folder(train_annotations, 'annotations/train/')
+move_files_to_folder(val_annotations, 'annotations/val/')
+move_files_to_folder(test_annotations, 'annotations/test/')
