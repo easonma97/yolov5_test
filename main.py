@@ -1,19 +1,17 @@
-import torch
-from IPython.display import Image  # for displaying images
 import os
-import random
 import shutil
 from sklearn.model_selection import train_test_split
 import xml.etree.ElementTree as ET
-from xml.dom import minidom
 from tqdm import tqdm
 from PIL import Image, ImageDraw
 import numpy as np
 import matplotlib.pyplot as plt
-import collections
+import random
 
 # random.seed(108)
 
+# Record the number of class from XML Annotation
+class_dict = []
 
 # Function to get the data from XML Annotation
 def extract_info_from_xml(xml_file):
@@ -43,7 +41,8 @@ def extract_info_from_xml(xml_file):
             for subelem in elem:
                 if subelem.tag == "name":
                     bbox["class"] = subelem.text
-
+                    if subelem.text not in class_dict:
+                        class_dict.append(subelem.text)
                 elif subelem.tag == "bndbox":
                     for subsubelem in subelem:
                         bbox[subsubelem.tag] = int(subsubelem.text)
@@ -51,12 +50,17 @@ def extract_info_from_xml(xml_file):
 
     return info_dict
 
-# Dictionary that maps class names to IDs
-class_name_to_id_mapping = {"trafficlight": 0,
-                            "stop": 1,
-                            "speedlimit": 2,
-                            "crosswalk": 3}
 
+# Dictionary that maps class names to IDs
+class_name_to_id_mapping = {}
+
+# map class_dict and id
+def map_class_and_id():
+    class_name_to_id_mapping.clear()
+    a = 0
+    for element in class_dict:
+        class_name_to_id_mapping[element] = a
+        a = a + 1
 
 # Convert the info dict to the required yolo format and write it to disk
 def convert_to_yolov5(info_dict):
@@ -87,25 +91,27 @@ def convert_to_yolov5(info_dict):
             "{} {:.3f} {:.3f} {:.3f} {:.3f}".format(class_id, b_center_x, b_center_y, b_width, b_height))
 
     # Name of the file which we have to save
-    save_file_name = os.path.join("/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/annotations/", info_dict["filename"].replace("png", "txt"))
+    save_file_name = os.path.join("C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/", info_dict["filename"].replace("png", "txt"))
 
     # Save the annotation to disk
     print("\n".join(print_buffer), file=open(save_file_name, "w"))
 
 # Get the annotations
-annotations = [os.path.join('/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/annotations/', x) for x in os.listdir('/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/annotations') if x[-3:] == "xml"]
+annotations = [os.path.join('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/', x) for x in os.listdir('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations') if x[-3:] == "xml"]
 annotations.sort()
 
 # Convert and save the annotations
 for ann in tqdm(annotations):
     info_dict = extract_info_from_xml(ann)
-    convert_to_yolov5(info_dict)
-annotations = [os.path.join('/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/annotations/', x) for x in os.listdir('/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/annotations') if x[-3:] == "txt"]
+    map_class_and_id()
+#     convert_to_yolov5(info_dict)
+# annotations = [os.path.join('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/', x) for x in os.listdir('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations') if x[-3:] == "txt"]
+print(class_dict)
 
-# random.seed(10)
-
+#
+# # random.seed(10)
+#
 class_id_to_name_mapping = dict(zip(class_name_to_id_mapping.values(), class_name_to_id_mapping.keys()))
-
 
 def plot_bounding_box(image, annotation_list):
     annotations = np.array(annotation_list)
@@ -132,7 +138,7 @@ def plot_bounding_box(image, annotation_list):
     plt.show()
 
 
-# # Get any random annotation file
+# Get any random annotation file
 # annotation_file = random.choice(annotations)
 # with open(annotation_file, "r") as file:
 #     annotation_list = file.read().split("\n")[:-1]
@@ -150,30 +156,33 @@ def plot_bounding_box(image, annotation_list):
 # plot_bounding_box(image, annotation_list)
 
 # Read images and annotations
-images = [os.path.join('/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/images/', x) for x in os.listdir('/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/images') if x[-3:] == "png"]
-annotations = [os.path.join('/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/annotations/', x) for x in os.listdir('/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/annotations') if x[-3:] == "txt"]
-
-images.sort()
-annotations.sort()
-
-# Split the dataset into train-valid-test splits
-train_images, val_images, train_annotations, val_annotations = train_test_split(images, annotations, test_size = 0.2, random_state = 1)
-val_images, test_images, val_annotations, test_annotations = train_test_split(val_images, val_annotations, test_size = 0.5, random_state = 1)
-
-#Utility function to move images
-def move_files_to_folder(list_of_files, destination_folder):
-    for f in list_of_files:
-        try:
-            shutil.move(f, destination_folder)
-        except:
-            print(f)
-            assert False
-
-# Move the splits into their folders
-move_files_to_folder(train_images, '/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/images/train')
-move_files_to_folder(val_images, '/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/images/val/')
-move_files_to_folder(test_images, '/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/images/test/')
-move_files_to_folder(train_annotations, '/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/annotations/train/')
-move_files_to_folder(val_annotations, '/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/annotations/val/')
-move_files_to_folder(test_annotations, '/Users/Eason/Downloads/yolov5/Road_Sign_Dataset/annotations/test/')
-
+# images = [os.path.join('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/images/', x) for x in os.listdir('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/images') if x[-3:] == "png"]
+# annotations = [os.path.join('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/', x) for x in os.listdir('C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations') if x[-3:] == "txt"]
+#
+# images.sort()
+# annotations.sort()
+#
+# # import collections
+# # print([item for item, count in collections.Counter(images).items() if count == 1])
+# # print(len(images))
+#
+# # Split the dataset into train-valid-test splits
+# train_images, val_images, train_annotations, val_annotations = train_test_split(images, annotations, test_size = 0.2, random_state = 1)
+# val_images, test_images, val_annotations, test_annotations = train_test_split(val_images, val_annotations, test_size = 0.5, random_state = 1)
+#
+# #Utility function to move images
+# def move_files_to_folder(list_of_files, destination_folder):
+#     for f in list_of_files:
+#         try:
+#             shutil.move(f, destination_folder)
+#         except:
+#             print(f)
+#             assert False
+#
+# # Move the splits into their folders
+# move_files_to_folder(train_images, 'C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/images/train/')
+# move_files_to_folder(val_images, 'C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/images/val/')
+# move_files_to_folder(test_images, 'C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/images/test/')
+# move_files_to_folder(train_annotations, 'C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/train/')
+# move_files_to_folder(val_annotations, 'C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/val/')
+# move_files_to_folder(test_annotations, 'C:/Users/70519/OneDrive/Desktop/yolov5/Leaf_Sign_Dataset/annotations/test/')
